@@ -6,17 +6,60 @@ import tempfile
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import json
+import platform
+import shutil
 
 app = FastAPI()
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:1420", "tauri://localhost"],  # Add your frontend URL
+    allow_origins=["http://localhost:1420", "tauri://localhost", "*"],  # Add your frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def is_command_available(command):
+    """Check if a command is available in PATH"""
+    return shutil.which(command) is not None
+
+def ensure_uvx_available():
+    """Make sure uvx is available for the sidecar"""
+    # First check if uvx is in PATH
+    if is_command_available('uvx'):
+        return 'uvx'
+    
+    # Try to install uvx if not found
+    try:
+        if platform.system() == "Windows":
+            # Try to use uv to install uvx
+            if is_command_available('uv'):
+                subprocess.run(['uv', 'pip', 'install', 'uv'], check=True)
+                if is_command_available('uvx'):
+                    return 'uvx'
+            
+            # Try pip as fallback
+            subprocess.run(['pip', 'install', 'uv'], check=True)
+            if is_command_available('uvx'):
+                return 'uvx'
+                
+            # Return direct module path as fallback
+            return [sys.executable, '-m', 'uv']
+        else:
+            # Unix-like systems
+            if is_command_available('pip'):
+                subprocess.run(['pip', 'install', 'uv'], check=True)
+            
+            if is_command_available('uvx'):
+                return 'uvx'
+            
+            # Return direct module path as fallback
+            return [sys.executable, '-m', 'uv']
+    except Exception as e:
+        print(f"Error ensuring uvx: {str(e)}")
+        # Return Python module path as ultimate fallback
+        return [sys.executable, '-m', 'uv']
 
 @app.get("/")
 async def read_root():
@@ -29,16 +72,33 @@ async def generate_flow(request: dict):
         if not metadata_path:
             raise HTTPException(status_code=400, detail="metadata_path is required")
         
-        # Run the uvx command
-        cmd = [
-            "uvx", 
-            "--refresh",
-            "--from", 
-            "data-flow-generator",
-            "data-flow-command",
-            "-m", 
-            metadata_path
-        ]
+        # Ensure uvx is available
+        uvx_cmd = ensure_uvx_available()
+        
+        # Build the command based on what's available
+        if isinstance(uvx_cmd, list):
+            # If we got a list, it's the Python module path
+            cmd = uvx_cmd + [
+                "--refresh",
+                "--from", 
+                "data-flow-generator",
+                "data-flow-command",
+                "-m", 
+                metadata_path
+            ]
+        else:
+            # Otherwise it's just the command name
+            cmd = [
+                uvx_cmd, 
+                "--refresh",
+                "--from", 
+                "data-flow-generator",
+                "data-flow-command",
+                "-m", 
+                metadata_path
+            ]
+        
+        print(f"Executing command: {' '.join(cmd)}")
         
         process = subprocess.Popen(
             cmd, 
@@ -48,8 +108,11 @@ async def generate_flow(request: dict):
         )
         stdout, stderr = process.communicate()
         
+        print(f"Command output: {stdout}")
+        print(f"Command errors: {stderr}")
+        
         if process.returncode != 0:
-            return {"success": False, "error": stderr}
+            return {"success": False, "error": f"Command failed: {stderr}"}
         
         # Parse stdout for the generated HTML path
         html_path = None
@@ -64,7 +127,10 @@ async def generate_flow(request: dict):
         return {"success": True, "html_path": html_path}
     
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        import traceback
+        tb = traceback.format_exc()
+        print(f"Error in generate_flow: {str(e)}\n{tb}")
+        return {"success": False, "error": str(e), "traceback": tb}
 
 def main():
     # Default port

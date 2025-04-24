@@ -1,0 +1,8 @@
+We are using bun, uv, and tauri.
+
+Important links to documentation.
+https://v2.tauri.app/start/migrate/from-tauri-1/#tauri-configuration
+https://v2.tauri.app/develop/sidecar/
+https://v2.tauri.app/develop/updating-dependencies/
+https://v2.tauri.app/develop/calling-rust/
+https://v2.tauri.app/develop

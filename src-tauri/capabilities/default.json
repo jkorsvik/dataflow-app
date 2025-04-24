@@ -7,9 +7,28 @@
   ],
   "permissions": [
     "core:default",
-    "opener:default",
     "dialog:default",
     "fs:default",
-    "fs:allow-write-text-file"
+    "opener:allow-default-urls",
+    "opener:allow-open-url",
+    "opener:allow-reveal-item-in-dir",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "args": [
+            "arg1",
+            "-a",
+            "--arg2",
+            {
+              "validator": "\\S+"
+            }
+          ],
+          "name": "binaries/my-sidecar",
+          "sidecar": true
+        }
+      ]
+    },
+    "shell:allow-open"
   ]
 }

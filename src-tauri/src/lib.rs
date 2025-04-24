@@ -1,16 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::env;
+use serde_json::{json, Value};
 use std::fs;
 use std::path::Path;
-use std::process::{Child, Command};
-use std::sync::Mutex;
-use tauri::{AppHandle, Manager, Runtime, State};
+use std::process::Command;
+use tauri::AppHandle;
 use which;
-
-// Structure to hold the sidecar process
-struct PythonSidecar(Mutex<Option<Child>>);
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -143,107 +139,31 @@ fn ensure_uvx_exists(uv_dir: &Path) -> Result<std::path::PathBuf, String> {
     Err("Failed to install or locate uvx with all available methods".to_string())
 }
 
-// Start the Python sidecar server
-fn start_sidecar_server(app: &AppHandle) -> Result<u16, String> {
-    let resource_path = app
-        .path()
-        .resource_dir()
-        .ok_or("Failed to get resource directory")?;
-    
-    // Use a fixed port for simplicity (could be made dynamic if needed)
-    let port = 8000;
-    
-    // Get the sidecar binary path based on platform
-    let sidecar_binary = if cfg!(windows) {
-        resource_path.join("bin").join("sidecar").join("dataflow_sidecar.exe")
-    } else {
-        resource_path.join("bin").join("sidecar").join("dataflow_sidecar")
-    };
-    
-    // Ensure the sidecar binary exists
-    if !sidecar_binary.exists() {
-        return Err(format!(
-            "Sidecar binary not found at: {}",
-            sidecar_binary.display()
-        ));
-    }
-    
-    // Start the sidecar process
-    let sidecar_process = Command::new(sidecar_binary)
-        .args(["--port", &port.to_string()])
-        .spawn()
-        .map_err(|e| format!("Failed to start sidecar process: {}", e))?;
-    
-    // Store the sidecar process
-    let python_sidecar: State<PythonSidecar> = app.state();
-    *python_sidecar.0.lock().unwrap() = Some(sidecar_process);
-    
-    Ok(port)
-}
-
 #[tauri::command]
-async fn generate_flow(app: AppHandle, metadata_path: String) -> Result<String, String> {
+async fn generate_flow(app: AppHandle, metadata_path: String) -> Result<Value, String> {
     use reqwest::Client;
-    
-    // Get the sidecar state
-    let python_sidecar: State<PythonSidecar> = app.state();
-    let sidecar_running = python_sidecar.0.lock().unwrap().is_some();
-    
-    // Start the sidecar if not already running
-    let port = if !sidecar_running {
-        start_sidecar_server(&app)?
-    } else {
-        8000 // Default port if already running
-    };
-    
-    // Make HTTP request to the sidecar
+    // Simply call the already-running sidecar at port 8000
     let client = Client::new();
     let response = client
-        .post(&format!("http://localhost:{}/generate", port))
-        .json(&serde_json::json!({
-            "metadata_path": metadata_path
-        }))
+        .post("http://127.0.0.1:8000/generate")
+        .json(&serde_json::json!({ "metadata_path": metadata_path }))
         .send()
         .await
         .map_err(|e| format!("Failed to communicate with sidecar: {}", e))?;
-    
-    let result: serde_json::Value = response
+    let result: Value = response
         .json()
         .await
         .map_err(|e| format!("Failed to parse sidecar response: {}", e))?;
-    
-    // Check for success or error
-    if result["success"].as_bool().unwrap_or(false) {
-        if let Some(html_path) = result["html_path"].as_str() {
-            return Ok(html_path.to_string());
-        }
-    }
-    
-    // Return error if we didn't get a successful response with an HTML path
-    if let Some(error) = result["error"].as_str() {
-        return Err(error.to_string());
-    }
-    
-    Err("Unknown error occurred".to_string())
+    Ok(result)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run(context: tauri::Context) {
     tauri::Builder::default()
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_opener::init())
-        .manage(PythonSidecar(Mutex::new(None)))
-        .invoke_handler(tauri::generate_handler![greet, generate_flow])
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::Destroyed = event {
-                // When the window is closed, kill the sidecar process
-                let python_sidecar: State<PythonSidecar> = window.app_handle().state();
-                if let Some(mut child) = python_sidecar.0.lock().unwrap().take() {
-                    let _ = child.kill();
-                }
-            }
-        })
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_shell::init())
+        .invoke_handler(tauri::generate_handler![generate_flow])
         .run(context)
         .expect("error while running tauri application");
 }

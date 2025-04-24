@@ -1,7 +1,6 @@
 use std::fs;
-use std::path::Path;
 use std::io;
-use std::fs::DirEntry;
+use std::path::Path;
 
 fn copy_dir_all(src: &Path, dst: &Path) -> io::Result<()> {
     if !dst.exists() {

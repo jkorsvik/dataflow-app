@@ -27,3 +27,4 @@ tauri-plugin-fs = "2"
 which = "5"
 reqwest = { version = "0.11", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
+tauri-plugin-shell = "2"

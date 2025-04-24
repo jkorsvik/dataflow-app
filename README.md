@@ -5,7 +5,7 @@ A desktop application that generates flow diagrams from various metadata formats
 ## Prerequisites
 
 ### All Platforms
-- [Python 3.8+](https://www.python.org/downloads/)
+- [Python 3.10+](https://www.python.org/downloads/)
 - [Rust](https://www.rust-lang.org/tools/install)
 - [Node.js](https://nodejs.org/) (or [Bun](https://bun.sh/docs/installation))
 
@@ -21,7 +21,7 @@ A desktop application that generates flow diagrams from various metadata formats
 - Various packages depending on your distribution (see [Tauri Prerequisites](https://tauri.app/start/prerequisites/#linux))
 
 ## Installation
-
+We are using bun, uv, and tauri.
 ### Install Bun (Recommended)
 
 #### Windows
@@ -128,3 +128,5 @@ pip install -r src\backends\requirements.txt
 
 1. **Permission errors**: You may need to use `sudo` for some installation steps
 2. **Missing dependencies**: Refer to the [Tauri Prerequisites](https://tauri.app/start/prerequisites/) for your platform
+
+

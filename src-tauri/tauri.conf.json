@@ -14,7 +14,12 @@
       {
         "title": "dataflow",
         "width": 800,
-        "height": 600
+        "height": 600,
+        "focus": true,
+        "resizable": true,
+        "fullscreen": false,
+        "dragDropEnabled": false,
+        "visible": true
       }
     ],
     "security": {
