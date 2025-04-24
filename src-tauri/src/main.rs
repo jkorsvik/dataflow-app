@@ -2,5 +2,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    dataflow_lib::run()
+    let context = tauri::generate_context!();
+    dataflow_lib::run(context);
 }
