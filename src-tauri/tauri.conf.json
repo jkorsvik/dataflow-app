@@ -6,7 +6,7 @@
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "bun run build && bun run build:sidecar",
     "frontendDist": "../dist"
   },
   "app": {
@@ -18,12 +18,30 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$TEMP/**",
+          "$APPCACHE/**",
+          "$APPDATA/**",
+          "$APPLOCALDATA/**",
+          "$APPCONFIG/**",
+          "$RESOURCE/**",
+          "$APP/**",
+          "$LOG/**",
+          "$DESKTOP/**",
+          "**"
+        ]
+      }
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
+    "resources": [
+      "bin/sidecar/*"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

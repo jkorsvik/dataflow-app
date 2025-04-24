@@ -40,17 +40,22 @@ const App: React.FC = () => {
       setStatus("Please select a metadata file first.");
       return;
     }
-    setStatus("Generating flow diagram...");
+    setStatus("Generating flow diagram... (Starting Python sidecar)");
     try {
       const htmlPath = await invoke<string>("generate_flow", {
         metadataPath,
       });
+      console.log('Received HTML path from backend:', htmlPath);
       setOutputPath(htmlPath);
-      setStatus(`Generated HTML: ${htmlPath}`);
-      // Ensure the iframe displays the generated HTML file
-      setIframeUrl(convertFileSrc(htmlPath as string));
+      const url = convertFileSrc(htmlPath as string);
+      console.log('Generated iframe URL:', url);
+      setIframeUrl(url);
+      setStatus(`Generated HTML at: ${htmlPath}. Displaying preview...`);
     } catch (e: any) {
+      console.error('Error generating flow:', e);
       setStatus("Error: " + (e?.message || String(e)));
+      // Reset iframe if we had an error
+      setIframeUrl(null);
     }
   };
 

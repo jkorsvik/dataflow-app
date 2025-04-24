@@ -1,0 +1,2 @@
+# This file ensures the bin/sidecar directory is created
+# and tracked by git. The directory will hold the compiled Python sidecar executable. 

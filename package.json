@@ -7,7 +7,16 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "build:sidecar-win": "powershell -ExecutionPolicy Bypass -File ./scripts/build-sidecar.ps1",
+    "build:sidecar-win-bat": "./scripts/build-sidecar.bat",
+    "build:sidecar-unix": "bash ./scripts/build-sidecar.sh",
+    "build:sidecar": "node -e \"process.platform === 'win32' ? require('child_process').execSync('bun run build:sidecar-win') : require('child_process').execSync('bun run build:sidecar-unix')\"",
+    "build:sidecar-bat": "node -e \"process.platform === 'win32' ? require('child_process').execSync('bun run build:sidecar-win-bat') : require('child_process').execSync('bun run build:sidecar-unix')\"",
+    "build:app": "node ./scripts/build.js",
+    "build:simple": "node ./scripts/build-simple.js",
+    "build:fast": "npm run fix:line-endings && npm run build:simple",
+    "fix:line-endings": "node ./scripts/fix-line-endings.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.4",
