@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "altgraph>=0.17.2",
     "click>=8.1.8",
-    "data-flow-generator>=0.1.4",
+    "data-flow-generator>=0.2.1",
     "fastapi>=0.104.0",
     "macholib>=1.16.2",
     "packaging>=23.1",
