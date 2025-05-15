@@ -67,7 +67,7 @@ function fixLineEndings() {
 function installDependencies() {
     console.log('Installing Node.js dependencies...');
     try {
-        runCommand('npm install');
+        runCommand('bun install');
         console.log('✅ Dependencies installed');
         return true;
     } catch (error) {
@@ -168,7 +168,7 @@ function buildPythonSidecar() {
 function buildTauriApp() {
     console.log('Building Tauri application...');
     try {
-        runCommand('npm run tauri build');
+        runCommand('bun run tauri build');
         console.log('✅ Tauri application built successfully');
         return true;
     } catch (error) {
