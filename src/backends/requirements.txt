@@ -5,7 +5,7 @@ asttokens==3.0.0
 chardet==5.2.0
 click==8.1.8
 colorama==0.4.6
-data-flow-generator==0.2.1
+data-flow-generator==0.2.4
 decorator==5.2.1
 diff-cover==9.2.4
 executing==2.2.0
@@ -21,7 +21,7 @@ jsonpickle==4.0.5
 macholib==1.16.3
 markupsafe==3.0.2
 matplotlib-inline==0.1.7
-narwhals==1.36.0
+narwhals==1.38.1
 networkx==3.4.2
 numpy==2.2.5
 packaging==25.0
@@ -61,7 +61,7 @@ tqdm==4.67.1
 traitlets==5.14.3
 types-colorama==0.4.15.20240311
 types-docutils==0.21.0.20241128
-types-networkx==3.4.2.20250319
+types-networkx==3.4.2.20250515
 types-pygments==2.19.0.20250305
 types-pytz==2025.2.0.20250326
 typing-extensions==4.13.2
@@ -69,4 +69,3 @@ typing-inspection==0.4.0
 uv==0.6.16
 uvicorn==0.34.2
 wcwidth==0.2.13
-dataflow-generator==0.2.1

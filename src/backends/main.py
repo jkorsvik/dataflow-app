@@ -1,6 +1,5 @@
 import os
 import sys
-import data_flow_generator.generate_data_flow
 import uvicorn
 import subprocess
 import tempfile
@@ -9,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import platform
 import shutil
-import data_flow_generator
+import data_flow_generator # type: ignore
 
 app = FastAPI()
 
@@ -38,9 +37,34 @@ async def generate_flow(request: dict):
         metadata_path = request.get("metadata_path")
         if not metadata_path:
             raise HTTPException(status_code=400, detail="metadata_path is required")
+        #edges, node_types, database_stats
+        result = data_flow_generator.generate_data_flow.parse_dump(metadata_path)
+        html = data_flow_generator.pyvis_mod.draw_pyvis_html(result[0], result[1])
+        return json.dumps({"data": result, "html": html})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
-        result = data_flow_generator.generate_data_flow.plot_data_flow(metadata_path)
-        html = data_flow_generator.generate_data_flow.draw_complete_data_flow(result)
+@app.post("/parse")
+async def parse(request: dict):
+    try:
+        metadata_path = request.get("metadata_path")
+        if not metadata_path:
+            raise HTTPException(status_code=400, detail="metadata_path is required")
+        result = data_flow_generator.generate_data_flow.parse_dump(metadata_path)
+        return json.dumps({"data": result})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/draw")
+async def draw(request: dict):
+    try:
+        result = request.get("data")
+        if not result:
+            raise HTTPException(status_code=400, detail="data is required")
+        #edges, node_types, database_stats
+     
+        html = data_flow_generator.pyvis_mod.draw_pyvis_html(result[0], result[1])
         return json.dumps({"data": result, "html": html})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
